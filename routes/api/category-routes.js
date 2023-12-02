@@ -1,11 +1,12 @@
 const router = require('express').Router();
-const { Category, Product } = require('../../models');
+const { Category, Product, ProductTag } = require('../../models');
 
 // The `/api/categories` endpoint
 
 router.get('/', async (req, res) => {
   // find all categories
   // be sure to include its associated Products
+  console.log("get")
   try {
     const categoryData = await Category.findAll({
       include: [Product]
@@ -19,28 +20,60 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   // find one category by its `id` value
   // be sure to include its associated Products
+
   try {
     const categoryData = await Category.findByPk(req.params.id, {
-      include: [Category, {model: Product, through: ProductTag}]
+      include: [{model: Product}]
     });
 
-    if (!productData) {
-      res.status(404).json({ message: 'No product found with this id!' });
+    if (!categoryData) {
+      res.status(404).json({ message: 'No category found with this id!' });
       return;
     }
 
-    res.status(200).json(productData);
+    res.status(200).json(categoryData);
   } catch (err) {
+    console.log(err)
     res.status(500).json(err);
   }
 });
 
 router.post('/', async (req, res) => {
+  console.log("post")
   // create a new category
+  Category.create({
+  /*{
+      "category_name": "chairs"
+    } */
+    category_name: req.body.category_name,
+  })
+    .then((newCategory) => {
+      // Send the newly created row as a JSON object
+      res.json(newCategory);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
 });
 
 router.put('/:id', async (req, res) => {
   // update a category by its `id` value
+  Category.update(
+    {
+      category_name: req.body.category_name,
+    },
+    {
+      // Gets the categories based on the id given in the request parameters
+      where: {
+        id: req.params.id,
+      },
+    }
+  )
+    .then((updatedCategory) => {
+      // Sends the updated category as a json response
+      res.json(updatedCategory);
+    })
+    .catch((err) => res.json(err));
 });
 
 router.delete('/:id', async (req, res) => {
